@@ -12,9 +12,13 @@ jobs:
   create_tasks:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false  # Monday continues even if Tuesday fails
       matrix:
         day: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday]
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4 # This fixes the "not a git repository" error
+
       - name: Create Issue and Update Project
         env:
           GH_TOKEN: ${{ secrets.PROJECT_PAT }}
@@ -31,8 +35,7 @@ jobs:
 
           echo "Created issue: $ISSUE_URL"
 
-          # 2. Add the issue to the project (using the URL directly is more stable)
-          # We use 'item-add' with the project number '6'
+          # 2. Add the issue to the project
           ITEM_ID=$(gh project item-add 6 --owner "Sroberts03" --url "$ISSUE_URL" --format json | jq -r '.id')
 
           # 3. Set your custom fields
