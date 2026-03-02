@@ -34,9 +34,3 @@ jobs:
 
           # 3. Add to project
           ITEM_ID=$(gh project item-add 6 --owner "$OWNER" --url "$ISSUE_URL" --format json | jq -r '.id')
-          
-          # 4. Update fields (Using --field-id to fix the 'unknown flag' error)
-          gh project item-edit --project-id "$PROJECT_ID" --id "$ITEM_ID" --field-id "Priority" --text "Leet Code Practice"
-          gh project item-edit --project-id "$PROJECT_ID" --id "$ITEM_ID" --field-id "Size" --text "S"
-          gh project item-edit --project-id "$PROJECT_ID" --id "$ITEM_ID" --field-id "Start Date" --date "$(date -I)"
-          gh project item-edit --project-id "$PROJECT_ID" --id "$ITEM_ID" --field-id "Due Date" --date "$(date -I)"
