@@ -2,7 +2,7 @@ name: Daily LeetCode Goal
 on:
   schedule:
     - cron: '0 15 * * 1' 
-
+  workflow_dispatch:
 jobs:
   create_tasks:
     runs-on: ubuntu-latest
