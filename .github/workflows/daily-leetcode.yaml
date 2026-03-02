@@ -22,7 +22,8 @@ jobs:
       - name: Create Issue and Update Project
         env:
           GH_TOKEN: ${{ secrets.PROJECT_PAT }}
-          PROJECT_URL: "https://github.com/users/Sroberts03/projects/6"
+          # Keeping this for the edit step
+          PROJECT_OWNER: "Sroberts03" 
         run: |
           # 1. Create the issue and get the URL
           ISSUE_URL=$(gh issue create \
@@ -35,11 +36,14 @@ jobs:
 
           echo "Created issue: $ISSUE_URL"
 
-          # 2. Add the issue to the project
-          ITEM_ID=$(gh project item-add 6 --owner "Sroberts03" --url "$ISSUE_URL" --format json | jq -r '.id')
+          # 2. Add the issue to project #6 and capture the Project ITEM_ID
+          # We use jq to pull the ID from the JSON response
+          ITEM_ID=$(gh project item-add 6 --owner "$PROJECT_OWNER" --url "$ISSUE_URL" --format json | jq -r '.id')
+          
+          echo "Project Item ID: $ITEM_ID"
 
-          # 3. Set your custom fields
-          gh project item-edit --url "$PROJECT_URL" --id "$ITEM_ID" --field "Priority" --text "Leet Code Practice"
-          gh project item-edit --url "$PROJECT_URL" --id "$ITEM_ID" --field "Size" --text "S"
-          gh project item-edit --url "$PROJECT_URL" --id "$ITEM_ID" --field "Start Date" --date "$(date -I)"
-          gh project item-edit --url "$PROJECT_URL" --id "$ITEM_ID" --field "Due Date" --date "$(date -I)"
+          # 3. Set your custom fields using the ITEM_ID
+          gh project item-edit --id "$ITEM_ID" --project-id 6 --owner "$PROJECT_OWNER" --field "Priority" --text "Leet Code Practice"
+          gh project item-edit --id "$ITEM_ID" --project-id 6 --owner "$PROJECT_OWNER" --field "Size" --text "S"
+          gh project item-edit --id "$ITEM_ID" --project-id 6 --owner "$PROJECT_OWNER" --field "Start Date" --date "$(date -I)"
+          gh project item-edit --id "$ITEM_ID" --project-id 6 --owner "$PROJECT_OWNER" --field "Due Date" --date "$(date -I)"
