@@ -1,0 +1,42 @@
+name: Daily LeetCode Goal
+on:
+  schedule:
+    - cron: '0 15 * * 1' 
+
+jobs:
+  create_tasks:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        day: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday]
+    steps:
+      - name: Create Task for ${{ matrix.day }}
+        id: create_task
+        uses: imjohnbo/issue-bot@v3
+        with:
+          title: "LeetCode Practice: ${{ matrix.day }}"
+          body: |
+            ### 🎯 Today's Goal:
+            - [ ] Solve 1 LeetCode Medium
+            - [ ] Record Time/Space Complexity
+            - [ ] Push solution to `/solutions` folder
+          project: "Resume Power Up"
+          column: "Backlog"
+
+      - name: Set project fields
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_PAT }}
+          PROJECT_URL: "https://github.com/users/Sroberts03/projects/6"
+          ITEM_ID: ${{ steps.create_task.outputs.project_item_id }}
+        run: |
+          gh project item-edit --url "$PROJECT_URL" --id "$ITEM_ID" \
+            --field "Priority" --text "Leet Code Practice"
+
+          gh project item-edit --url "$PROJECT_URL" --id "$ITEM_ID" \
+            --field "Size" --text "S"
+
+          gh project item-edit --url "$PROJECT_URL" --id "$ITEM_ID" \
+            --field "Start Date" --date "$(date -I)"
+        
+          gh project item-edit --url "$PROJECT_URL" --id "$ITEM_ID" \
+            --field "Due Date" --date "$(date -I -d '+1 day')"
