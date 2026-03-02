@@ -15,32 +15,26 @@ jobs:
       matrix:
         day: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday]
     steps:
-      - name: Create Issue for ${{ matrix.day }}
-        id: create_issue
-        uses: imjohnbo/issue-bot@v3
-        with:
-          title: "LeetCode Practice: ${{ matrix.day }}"
-          body: |
-            ### 🎯 Today's Goal:
-            - [ ] Solve 1 LeetCode Medium
-            - [ ] Record Time/Space Complexity
-            - [ ] Push solution to `/solutions` folder
-          token: ${{ secrets.PROJECT_PAT }}
-
-      - name: Add to Project
-        id: add_project
-        uses: actions/add-to-project@v1.0.2
-        with:
-          project-url: https://github.com/users/Sroberts03/projects/6
-          github-token: ${{ secrets.PROJECT_PAT }}
-
-      - name: Set project fields
+      - name: Create Issue and Update Project
         env:
           GH_TOKEN: ${{ secrets.PROJECT_PAT }}
           PROJECT_URL: "https://github.com/users/Sroberts03/projects/6"
-          ITEM_ID: ${{ steps.add_project.outputs.item-id }}
         run: |
+          # 1. Create the issue and capture its global Node ID
+          ISSUE_ID=$(gh issue create \
+            --title "LeetCode Practice: ${{ matrix.day }}" \
+            --body "### 🎯 Today's Goal:
+            - [ ] Solve 1 LeetCode Medium
+            - [ ] Record Time/Space Complexity
+            - [ ] Push solution to /solutions folder" \
+            --label "documentation" \
+            --json id --jq '.id')
+
+          # 2. Add that issue to your project and capture the Project Item ID
+          ITEM_ID=$(gh project item-add 6 --owner Sroberts03 --format json --id "$ISSUE_ID" --jq '.id')
+
+          # 3. Set your custom fields
           gh project item-edit --url "$PROJECT_URL" --id "$ITEM_ID" --field "Priority" --text "Leet Code Practice"
           gh project item-edit --url "$PROJECT_URL" --id "$ITEM_ID" --field "Size" --text "S"
           gh project item-edit --url "$PROJECT_URL" --id "$ITEM_ID" --field "Start Date" --date "$(date -I)"
-          gh project item-edit --url "$PROJECT_URL" --id "$ITEM_ID" --field "Due Date" --date "$(date -I -d '+1 day')"
+          gh project item-edit --url "$PROJECT_URL" --id "$ITEM_ID" --field "Due Date" --date "$(date -I)"
