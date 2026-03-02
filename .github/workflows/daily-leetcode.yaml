@@ -1,8 +1,8 @@
 name: Daily LeetCode Goal
 on:
+  workflow_dispatch:
   schedule:
     - cron: '0 15 * * 1' 
-  workflow_dispatch:
 
 permissions:
   issues: write
@@ -16,7 +16,7 @@ jobs:
       matrix:
         day: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday]
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Create Issue and Update Project
@@ -24,25 +24,19 @@ jobs:
           GH_TOKEN: ${{ secrets.PROJECT_PAT }}
           OWNER: "Sroberts03"
         run: |
-          # 1. Create the issue and get the URL
+          # 1. Get the internal Project ID (This fixes the 'Global id of 6' error)
+          PROJECT_ID=$(gh project list --owner "$OWNER" --format json --jq '.projects[] | select(.number==6) | .id')
+
+          # 2. Create the issue
           ISSUE_URL=$(gh issue create \
             --title "LeetCode Practice: ${{ matrix.day }}" \
-            --body "### 🎯 Today's Goal:
-            - [ ] Solve 1 LeetCode Medium
-            - [ ] Record Time/Space Complexity
-            - [ ] Push solution to /solutions folder" \
-            --label "documentation")
+            --body "Solve 1 LeetCode Medium and push to /solutions")
 
-          echo "Created issue: $ISSUE_URL"
-
-          # 2. Add the issue to project #6 and capture the ITEM_ID
+          # 3. Add to project
           ITEM_ID=$(gh project item-add 6 --owner "$OWNER" --url "$ISSUE_URL" --format json | jq -r '.id')
           
-          echo "Project Item ID: $ITEM_ID"
-
-          # 3. Set your custom fields
-          # Using the --project-id flag with string values for fields
-          gh project item-edit --id "$ITEM_ID" --project-id 6 --field-id "Priority" --text "Leet Code Practice"
-          gh project item-edit --id "$ITEM_ID" --project-id 6 --field-id "Size" --text "S"
-          gh project item-edit --id "$ITEM_ID" --project-id 6 --field-id "Start Date" --date "$(date -I)"
-          gh project item-edit --id "$ITEM_ID" --project-id 6 --field-id "Due Date" --date "$(date -I)"
+          # 4. Update fields using the internal PROJECT_ID
+          gh project item-edit --project-id "$PROJECT_ID" --id "$ITEM_ID" --field "Priority" --text "Leet Code Practice"
+          gh project item-edit --project-id "$PROJECT_ID" --id "$ITEM_ID" --field "Size" --text "S"
+          gh project item-edit --project-id "$PROJECT_ID" --id "$ITEM_ID" --field "Start Date" --date "$(date -I)"
+          gh project item-edit --project-id "$PROJECT_ID" --id "$ITEM_ID" --field "Due Date" --date "$(date -I)"
